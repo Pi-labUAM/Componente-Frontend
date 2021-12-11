@@ -1,0 +1,261 @@
+﻿
+@page "/research/add/{ProyectTitle}/{CreateDate}"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<br />
+
+<div class="form-group row mb-1">
+
+    <div class="col-sm-12">
+        <h3 style="text-align:center">@ProyectTitle</h3>
+    </div>
+</div>
+
+<br />
+
+<div class="form-group row mb-1">
+
+    <div class="col-sm-8">
+        <input type="text" style="text-align:center; border:groove" placeholder="Enter Document" class="form-control" @bind="@searchTxt">
+    </div>
+
+    <div class="col-sm-2">
+        <button class="btn btn-info btn-lg btn-block" @onclick="Search"> Search </button>
+    </div>
+
+    <div class="col-sm-2">
+        <button class="btn btn-danger btn-lg btn-block" @onclick="Hide"> Cancel </button>
+    </div>
+</div>
+
+<br />
+
+@if (!oParticipant.Document.Equals(""))
+{
+    <div class="card img-fluid" alt="Responsive image">
+
+        <div class="card-header">
+            <div class="form-group row mb-1">
+                @oParticipant.Document
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <div class="form-group row mb-1">
+
+                <div class="col-sm-6">
+                    <img class="card-img-top img-fluid" src="/Images/Participants/@oParticipant.Picture" alt="Card image cap Responsive image">
+                </div>
+
+                <div class="col-sm-6">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">@oParticipant.Fullname</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="form-group row mb-1">
+                <div class="col-sm-12">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" style="text-align:center">@oParticipant.Email</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card-footer text-muted">
+
+            <div class="form-group row mb-1">
+
+                <div class="col-sm-4">
+                    <button class="btn btn-info btn-lg btn-block" @onclick="Add"> Add </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+}
+
+@if (oAlert.Visible)
+{
+    <div class="form-group row mb-1">
+        <div class="col-sm-12">
+            <div class="alert alert-@oAlert.Color" role="alert" style="text-align:center">
+                @oAlert.Message
+            </div>
+        </div>
+
+    </div>
+}
+
+<div class="form-group row mb-1">
+
+    @if (oResponse != null && oResponse.Data != null)
+    {
+        @foreach (var oElement in lstFilter)
+        {
+            <div class="col col-md-6">
+
+                <div class="card img-fluid" alt="Responsive image">
+
+                    <div class="card-header">
+                        <div class="form-group row mb-1">
+                            @oElement.Document
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="form-group row mb-1">
+
+                            <div class="col-sm-6">
+                                <img class="card-img-top img-fluid" src="/Images/Participants/@oElement.Picture" alt="Card image cap Responsive image">
+                            </div>
+
+                            <div class="col-sm-6">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">@oElement.Fullname</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mb-1">
+                            <div class="col-sm-12">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item" style="text-align:center">@oElement.Email</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="card-footer text-muted">
+                        <div class="col-sm-12">
+                            <a href="/research/deleteparticipant/@ProyectTitle/@CreateDate/@oElement.Document" class="btn btn-danger btn-lg btn-block"> Delete </a>
+                        </div>
+                    </div>
+                </div>
+
+                <br />
+
+            </div>
+        }
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public string CreateDate { get; set; }
+
+    [Parameter]
+    public string ProyectTitle { get; set; }
+
+    String searchTxt = "";
+
+    Inscription oInscription = new Inscription();
+
+    Participant oParticipant = new Participant();
+
+    Response<Participant> oResponseP = new Response<Participant>();
+
+    Response<Participant> oResponsePAux = new Response<Participant>();
+
+    Response<object> oResponseI = new Response<object>();
+
+    String Url = "/api/Inscription";
+
+    Alert oAlert = new Alert();
+
+    public Response<List<Inscription>> oResponse = new Response<List<Inscription>>();
+
+    public List<Participant> lstFilter = new List<Participant> { };
+
+    protected override async Task OnInitializedAsync()
+    {
+        oResponse = await Http.GetFromJsonAsync<Response<List<Inscription>>>(Url);
+
+        foreach (Inscription oFilter in oResponse.Data)
+        {
+            if (oFilter.Research.Equals(CreateDate))
+            {
+                oResponsePAux = await Http.GetFromJsonAsync<Response<Participant>>("/api/Participant/" + oFilter.Participant);
+
+                if (oResponsePAux.Success == 1) lstFilter.Add(oResponsePAux.Data);
+            }
+        }
+    }
+
+    private async Task Add()
+    {
+        oInscription.Research = CreateDate;
+
+        oInscription.Participant = oParticipant.Document;
+
+        oInscription.CreateDate = DateTime.Now.Day.ToString() + "-" + DateTime.Now.Month.ToString() + "-" + DateTime.Now.Year.ToString() + ",";
+        oInscription.CreateDate += DateTime.Now.Hour.ToString() + "-" + DateTime.Now.Minute.ToString() + "-" + DateTime.Now.Second.ToString();
+
+        var response = await Http.PostAsJsonAsync<Inscription>(Url, oInscription);
+        oResponseI = response.Content.ReadFromJsonAsync<Response<object>>().Result;
+
+        if (oResponseI.Success == 0) oAlert.isBad(oResponseI.Message);
+
+        else
+        {
+            oAlert.isGood("Participant with Document = " + oParticipant.Document + " Added");
+            oParticipant.Reset();
+            oInscription.Reset();
+
+            await GetAll();
+        }
+    }
+
+    private async Task Search()
+    {
+        searchTxt = searchTxt.Trim();
+
+        oAlert.Reset();
+
+        if (!searchTxt.Equals(""))
+        {
+            oResponseP = await Http.GetFromJsonAsync<Response<Participant>>("/api/Participant/" + searchTxt);
+
+            if (oResponseP.Success == 0) oAlert.isBad(oResponseP.Message);
+
+            else oParticipant = oResponseP.Data;
+        }
+    }
+
+    private void Hide()
+    {
+        searchTxt = "";
+        oParticipant.Reset();
+        oAlert.Reset();
+    }
+
+    private async Task GetAll()
+    {
+        lstFilter = new List<Participant> { };
+
+        oResponse = await Http.GetFromJsonAsync<Response<List<Inscription>>>(Url);
+
+        foreach (Inscription oFilter in oResponse.Data)
+        {
+            if (oFilter.Research.Equals(CreateDate))
+            {
+                oResponsePAux = await Http.GetFromJsonAsync<Response<Participant>>("/api/Participant/" + oFilter.Participant);
+
+                if (oResponsePAux.Success == 1) lstFilter.Add(oResponsePAux.Data);
+            }
+        }
+    }
+}

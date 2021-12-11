@@ -1,0 +1,117 @@
+﻿
+@page "/publication/listar"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+
+<div class="container-fluid">
+
+    <h3 style="text-align:center">My Publications</h3>
+
+    <br />
+
+    @if (oResponse != null && oResponse.Data != null)
+    {
+        <div class="form-group row mb-1">
+
+            <div class="col-sm-8">
+                <input type="text" style="text-align:center; border:groove" placeholder="Enter Title" class="form-control" @bind="@searchTxt">
+            </div>
+
+            <div class="col-sm-2">
+                <button class="btn btn-info btn-lg btn-block" @onclick="Search"> Search </button>
+            </div>
+
+            <div class="col-sm-2">
+                <button class="btn btn-danger btn-lg btn-block" @onclick="GetAll"> Cancel </button>
+            </div>
+        </div>
+
+        <br />
+
+        <div class="form-group row mb-1">
+
+            @foreach (var oElement in oResponse.Data)
+            {
+                <div class="col col-md-6">
+
+                    <div class="card img-fluid" alt="Responsive image">
+
+                        <div class="card-header">
+                            <h5 class="card-title">Posted @oElement.PublicationDate</h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="form-group row mb-1">
+
+                                <div class="col-sm-3">
+                                    <img class="card-img-top img-fluid" src="/Images/Publications/pdf.png" alt="Card image cap Responsive image">
+                                </div>
+
+                                <div class="col-sm-9">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">@oElement.Title</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="card-footer text-muted">
+
+                            <div class="form-group row mb-1">
+
+                                <div class="col-sm-4">
+                                    <a href=@oElement.Link class="btn btn-info btn-lg btn-block"> View </a> <br />
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <a href="/publication/editar/@oElement.CreateDate" class="btn btn-warning btn-lg btn-block"> Edit </a> <br />
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <a href="/publication/eliminar/@oElement.Title/@oElement.CreateDate" class="btn btn-danger btn-lg btn-block"> Delete </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <br />
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@code {
+
+    String searchTxt = "";
+
+    public string Url = "/api/Publication";
+
+    public Response<List<Publication>> oResponse = new Response<List<Publication>>();
+
+    protected override async Task OnInitializedAsync() => oResponse = await Http.GetFromJsonAsync<Response<List<Publication>>>(Url);
+
+    private async Task GetAll()
+    {
+        oResponse = await Http.GetFromJsonAsync<Response<List<Publication>>>(Url);
+
+        searchTxt = "";
+    }
+
+    private async Task Search()
+    {
+        searchTxt = searchTxt.Trim();
+
+        if (!searchTxt.Equals("")) oResponse = await Http.GetFromJsonAsync<Response<List<Publication>>>(Url + "/search/" + searchTxt);
+    }
+}

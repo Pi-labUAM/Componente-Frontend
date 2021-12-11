@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "uEzIT9KxRNVEOLaw088gE7pevGFPCEfhx6sUppcVW2bN0Xm6jmwu2QFq/z7h42HDxXyPjqReaDlOmMKk+M+fdw==",
+  "success": true,
+  "projectFilePath": "D:\\Paulo\\FrontendPaulo\\FrontendPaulo\\FrontendPaulo.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Jhona\\.nuget\\packages\\system.net.http.json\\5.0.0\\system.net.http.json.5.0.0.nupkg.sha512",
+    "C:\\Users\\Jhona\\.nuget\\packages\\system.text.json\\5.0.0\\system.text.json.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

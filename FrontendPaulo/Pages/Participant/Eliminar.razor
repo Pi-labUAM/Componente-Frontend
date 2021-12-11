@@ -1,0 +1,51 @@
+﻿
+@page "/participant/eliminar/{Document}"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid">
+
+    <h3>Delete Confirmation</h3>
+
+    <div class="form-group row mb-1">
+        <div class="alert alert-danger" role="alert">
+            Participant => ' @Document '
+        </div>
+    </div>
+
+    <div>
+        <button class="btn btn-danger" @onclick="Delete">Delete</button>
+
+        <button class="btn btn-secondary" @onclick="Cancelar">Cancel</button>
+    </div>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string Document { get; set; }
+
+    public Response<object> oResponse = new Response<object>();
+
+    public string Url = "/api/Participant";
+
+    private void Cancelar()
+    {
+        NavigationManager.NavigateTo("/participant/listar");
+    }
+
+    private async Task Delete()
+    {
+        var response = await Http.DeleteAsync(Url + "/" + Document);
+
+        oResponse = response.Content.ReadFromJsonAsync<Response<object>>().Result;
+
+        NavigationManager.NavigateTo("/participant/listar");
+    }
+}

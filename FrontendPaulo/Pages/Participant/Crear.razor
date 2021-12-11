@@ -1,0 +1,156 @@
+﻿
+@page "/participant/crear"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+
+<EditForm Model="oParticipant">
+
+    <div class="container-fluid">
+
+        <div class="form-group row mb-1">
+
+            <div class="col-sm-6">
+
+                <div class="form-group row mb-1">
+
+                    <div class="col-sm-6">
+                        <h3>Create Participant</h3>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="/participant/listar" class="btn btn-info btn-lg btn-block"> View </a>
+                    </div>
+
+                </div>
+
+                <br />
+
+                <div class="form-group row mb-1">
+                    <div class="col-sm-6">
+                        <input type="file" @bind-value="@rutaInput">
+                    </div>
+
+                    @if (!@rutaInput.Equals(""))
+                    {
+                        <div class="col-sm-6">
+                            <img src="/Images/Participants/@rutaInput.Substring(12)" class="img-fluid" alt="Responsive image">
+                        </div>
+                    }
+
+                </div>
+
+                <br />
+
+                <div class="form-group row mb-1">
+                    <div class="col-sm-12">
+                        <InputText class="form-control" @bind-Value="@oParticipant.Fullname" placeholder="Enter Fullname"></InputText>
+                    </div>
+                </div>
+
+                <br />
+
+                <div class="form-group row mb-1">
+                    <div class="col-sm-6">
+                        <InputText class="form-control" @bind-Value="@oParticipant.Document" placeholder="Enter Document" maxlength="10"></InputText>
+                    </div>
+                    <div class="col-sm-6">
+                        <InputText class="form-control" @bind-Value="@oParticipant.Email" placeholder="Enter Email"></InputText>
+                    </div>
+                </div>
+
+                <br />
+
+                @if (oAlert.Visible)
+                {
+                    <div class="form-group row mb-1">
+                        <div class="col-sm-12 alert alert-@oAlert.Color" role="alert">
+                            @oAlert.Message
+                        </div>
+                    </div>
+                }
+
+                <div class="form-group row mb-1">
+                    <div class="col-sm-12">
+                        <button type="submit" class="btn btn-success btn-lg btn-block" @onclick="Save">Save</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6">
+                <img src="/Images/Participants/main.jpg" class="img-fluid" alt="Responsive image">
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    Participant oParticipant = new Participant();
+
+    Response<object> oResponse = new Response<object>();
+
+    String Url = "/api/Participant";
+
+    String rutaInput = "";
+
+    Alert oAlert = new Alert();
+
+    private async Task Save()
+    {
+
+        if (validateFullname())
+        {
+            if (!rutaInput.Equals("")) oParticipant.Picture = rutaInput.Substring(12);
+
+            var response = await Http.PostAsJsonAsync<Participant>(Url, oParticipant);
+            oResponse = response.Content.ReadFromJsonAsync<Response<object>>().Result;
+
+            if (oResponse.Success == 0) oAlert.isBad(oResponse.Message);
+
+            else
+            {
+                oAlert.isGood("Participant with document " + oParticipant.Document + " Created");
+                oParticipant.Reset();
+                rutaInput = "";
+            }
+        }
+    }
+
+    private Boolean validateFullname()
+    {
+        if (oParticipant.Fullname.Equals("")) return oAlert.isBad("Field Fullname is required");
+
+        oParticipant.Fullname = oParticipant.Fullname.Trim();
+
+        return validateDocument();
+    }
+
+    private Boolean validateDocument()
+    {
+
+        if (oParticipant.Document.Equals("")) return oAlert.isBad("Field Document is required");
+
+        oParticipant.Document = oParticipant.Document.Trim();
+
+        if (oParticipant.Document.Length < 8) return oAlert.isBad("Field Document requires at least 8 digits");
+
+        foreach (var c in oParticipant.Document)
+        {
+            if ((int)c < 48 || (int)c > 57) return oAlert.isBad("Field Document does not allow letters");
+        }
+
+        return validateEmail();
+    }
+
+    private Boolean validateEmail()
+    {
+        oParticipant.Email = oParticipant.Email.Trim();
+
+        if (oParticipant.Email.Equals("")) return oAlert.isBad("Field Email is required");
+
+        return true;
+    }
+}

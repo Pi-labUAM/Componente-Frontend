@@ -1,0 +1,139 @@
+﻿
+@page "/research/get/{CreateDate}"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+
+<div class="container-fluid">
+
+    <div class="parrafo">
+
+        <h1 style="text-align:center">@oResearch.Title</h1>
+
+        <br />
+
+        <img src="/Images/Research/@oResearch.Picture" class="img-fluid" alt="Responsive image">
+
+        <h3>Abstrtact</h3>
+
+        <p> @oResearch.Abstract </p>
+
+        <h3>Objectives</h3>
+
+        <p> @oResearch.Objectives </p>
+
+        <h3>Results</h3>
+
+        <p> @oResearch.Results </p>
+
+    </div>
+
+    <br />
+
+    <div class="form-group row mb-1">
+
+        <div class="col col-md-12">
+            <h3 style="text-align:center">Participants</h3>
+        </div>
+
+    </div>
+
+    <br />
+
+    <div class="form-group row mb-1">
+
+        @if (oResponseR != null && oResponseR.Data != null)
+        {
+            @foreach (var oElement in lstFilter)
+            {
+                <div class="col col-md-6">
+
+                    <div class="card img-fluid" alt="Responsive image">
+
+                        <div class="card-header">
+                            <div class="form-group row mb-1">
+                                @oElement.Document
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="form-group row mb-1">
+
+                                <div class="col-sm-6">
+                                    <img class="card-img-top img-fluid" src="/Images/Participants/@oElement.Picture" alt="Card image cap Responsive image">
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">@oElement.Fullname</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="form-group row mb-1">
+                                <div class="col-sm-12">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item" style="text-align:center">@oElement.Email</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="card-footer text-muted">
+
+                        </div>
+                    </div>
+
+                    <br />
+
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public string CreateDate { get; set; }
+
+    Research oResearch = new Research();
+
+    Response<Research> oResponseR = new Response<Research>();
+
+    String Url = "/api/Research";
+
+
+    Response<Participant> oResponsePAux = new Response<Participant>();
+
+    public Response<List<Inscription>> oResponse = new Response<List<Inscription>>();
+
+    public List<Participant> lstFilter = new List<Participant> { };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        oResponseR = await Http.GetFromJsonAsync<Response<Research>>(Url + "/" + CreateDate);
+
+        if (oResponseR.Success == 1) oResearch = oResponseR.Data;
+
+
+        oResponse = await Http.GetFromJsonAsync<Response<List<Inscription>>>("/api/Inscription");
+
+        foreach (Inscription oFilter in oResponse.Data)
+        {
+            if (oFilter.Research.Equals(CreateDate))
+            {
+                oResponsePAux = await Http.GetFromJsonAsync<Response<Participant>>("/api/Participant/" + oFilter.Participant);
+
+                if (oResponsePAux.Success == 1) lstFilter.Add(oResponsePAux.Data);
+            }
+        }
+    }
+
+}

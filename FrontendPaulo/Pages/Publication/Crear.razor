@@ -1,0 +1,138 @@
+﻿
+@page "/publication/crear"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+
+<EditForm Model="oPublication">
+
+    <div class="container-fluid">
+
+        <div class="form-group row mb-1">
+
+            <div class="col-sm-6">
+
+                <div class="form-group row mb-1">
+
+                    <div class="col-sm-6">
+                        <h3>CREATE</h3>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <a href="/publication/listar" class="btn btn-primary btn-lg btn-block"> View </a>
+                    </div>
+
+                </div>
+
+                <br />
+
+                <div class="form-group row mb-1">
+                    <InputDate class="form-control" @bind-Value="@oPublication.AuxDate" min="2012-01-01" max="2021-12-31"></InputDate>
+                </div>
+
+                <br />
+
+                <div class="form-group row mb-1">
+                    <InputTextArea class="form-control" @bind-Value="@oPublication.Title" placeholder="Enter Title"></InputTextArea>
+                </div>
+
+                <br />
+
+                <div class="form-group row mb-1">
+                    <InputTextArea class="form-control" @bind-Value="@oPublication.Link" placeholder="Enter Link"></InputTextArea>
+                </div>
+
+                <br />
+
+                @if (oAlert.Visible)
+                {
+                    <div class="form-group row mb-1">
+                        <div class="alert alert-@oAlert.Color" role="alert">
+                            @oAlert.Message
+                        </div>
+                    </div>
+                }
+
+                <div class="form-group row mb-1">
+                    <button type="submit" class="btn btn-success btn-lg btn-block" @onclick="Save"> Save </button>
+                </div>
+
+            </div>
+
+            <div class="col-sm-6">
+                <img src="/Images/Publications/main.jpg" class="img-fluid" alt="Responsive image">
+            </div>
+
+        </div>
+
+    </div>
+</EditForm>
+
+@code {
+
+    Publication oPublication = new Publication();
+
+    Response<object> oResponse = new Response<object>();
+
+    String Url = "/api/Publication";
+
+    Alert oAlert = new Alert();
+
+    private async Task Save()
+    {
+
+        if (validateMaxDate())
+        {
+            oPublication.CreateDate = DateTime.Now.Day.ToString() + "-" + DateTime.Now.Month.ToString() + "-" + DateTime.Now.Year.ToString() + ",";
+            oPublication.CreateDate += DateTime.Now.Hour.ToString() + "-" + DateTime.Now.Minute.ToString() + "-" + DateTime.Now.Second.ToString();
+
+            var response = await Http.PostAsJsonAsync<Publication>(Url, oPublication);
+            oResponse = response.Content.ReadFromJsonAsync<Response<object>>().Result;
+
+            if (oResponse.Success == 0) oAlert.isBad(oResponse.Message);
+
+            else
+            {
+                oAlert.isGood("Publication" + " ' " + oPublication.Title + " ' " + " Created");
+                oPublication.Reset();
+            }
+        }
+    }
+
+    private Boolean validateMaxDate()
+    {
+        if (DateTime.Now.Year.ToString().Equals(oPublication.AuxDate.Year.ToString()))
+        {
+            if (DateTime.Now.Month.ToString().Equals(oPublication.AuxDate.Month.ToString()))
+            {
+                if (Convert.ToInt32((oPublication.AuxDate.Day)) > Convert.ToInt32(DateTime.Now.Day.ToString()))
+                    return oAlert.isBad("Publication Date is greater than the current date");
+            }
+        }
+
+        oPublication.PublicationDate = DateTime.Now.ToString().Split(" ")[0];
+
+        return validateTitle();
+    }
+
+    private Boolean validateTitle()
+    {
+        if (oPublication.Title.Equals("")) return oAlert.isBad("Field Title is required");
+
+        oPublication.Title = oPublication.Title.Trim();
+
+        return validateLink();
+    }
+
+    private Boolean validateLink()
+    {
+        if (oPublication.Link.Equals("")) return oAlert.isBad("Field Link is required");
+
+        oPublication.Link = oPublication.Link.Trim();
+
+        return true;
+    }
+}

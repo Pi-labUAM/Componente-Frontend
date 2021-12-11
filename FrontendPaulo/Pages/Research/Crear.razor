@@ -1,0 +1,169 @@
+﻿
+@page "/research/crear"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<EditForm Model="oResearch">
+    <div class="container-fluid">
+
+        <br />
+
+        <div class="form-group row mb-1">
+            <div class="col-sm-6">
+
+                <div class="form-group row mb-1">
+                    <div class="col-sm-6">
+                        <input type="file" @bind-value="@rutaInput">
+                    </div>
+
+                    <div class="col-sm-6">
+                        <a href="/research/listar" class="btn btn-primary btn-lg btn-block"> View </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <br />
+
+        <div class="form-group row mb-1">
+
+            <div class="col-sm-6">
+                <InputTextArea class="form-control" @bind-Value="@oResearch.Title" placeholder="Title"></InputTextArea>
+            </div>
+
+            @if (!@rutaInput.Equals(""))
+            {
+                <div class="col-sm-6">
+                    <img src="/Images/Research/@rutaInput.Substring(12)" class="img-fluid" alt="Responsive image">
+                </div>
+            }
+        </div>
+
+        <br />
+
+        <div class="form-group row mb-1">
+            <div class="col-sm-12">
+                <InputTextArea class="form-control" @bind-Value="@oResearch.Abstract" placeholder="Abstract"></InputTextArea>
+            </div>
+        </div>
+
+        <br />
+
+        <div class="form-group row mb-1">
+            <div class="col-sm-12">
+                <InputTextArea class="form-control" @bind-Value="@oResearch.Objectives" placeholder="Objectives"></InputTextArea>
+            </div>
+        </div>
+
+        <br />
+
+        <div class="form-group row mb-1">
+            <div class="col-sm-12">
+                <InputTextArea class="form-control" @bind-Value="@oResearch.Results" placeholder="Results"></InputTextArea>
+            </div>
+        </div>
+
+        <br />
+
+        @if (oAlert.Visible)
+        {
+            <div class="form-group row mb-1">
+                <div class="alert alert-@oAlert.Color" role="alert">
+                    @oAlert.Message
+                </div>
+            </div>
+        }
+
+        <div class="form-group row mb-1">
+            <button type="submit" class="btn btn-success btn-lg btn-block" @onclick="Save"> Save </button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    Research oResearch = new Research();
+
+    Response<object> oResponse = new Response<object>();
+
+    String Url = "/api/Research";
+
+    String rutaInput = "";
+
+    Alert oAlert = new Alert();
+
+    private async Task Save()
+    {
+
+        if (validateTitle())
+        {
+            if (!rutaInput.Equals("")) oResearch.Picture = rutaInput.Substring(12);
+
+            oResearch.CreateDate = DateTime.Now.Day.ToString() + "-" + DateTime.Now.Month.ToString() + "-" + DateTime.Now.Year.ToString() + ",";
+            oResearch.CreateDate += DateTime.Now.Hour.ToString() + "-" + DateTime.Now.Minute.ToString() + "-" + DateTime.Now.Second.ToString();
+
+            var response = await Http.PostAsJsonAsync<Research>(Url, oResearch);
+            oResponse = response.Content.ReadFromJsonAsync<Response<object>>().Result;
+
+            if (oResponse.Success == 0) oAlert.isBad(oResponse.Message);
+
+            else
+            {
+                oAlert.isGood("Research" + " ' " + oResearch.Title + " ' " + " Created");
+                oResearch.Reset();
+                rutaInput = "";
+            }
+        }
+    }
+
+    private Boolean validateTitle()
+    {
+        oResearch.Title = oResearch.Title.Trim();
+
+        if (oResearch.Title.Equals("")) return oAlert.isBad("Field Title is required");
+
+        return validateAbstract();
+    }
+
+    private Boolean validateAbstract()
+    {
+        oResearch.Abstract = oResearch.Abstract.Trim();
+
+        if (oResearch.Abstract.Equals("")) return oAlert.isBad("Field Abstract is required");
+
+        return validateObjectives();
+    }
+
+    private Boolean validateObjectives()
+    {
+        oResearch.Objectives = oResearch.Objectives.Trim();
+
+        if (oResearch.Objectives.Equals("")) return oAlert.isBad("Field Objectives is required");
+
+        return validateResults();
+    }
+
+    private Boolean validateResults()
+    {
+        oResearch.Results = oResearch.Results.Trim();
+
+        if (oResearch.Results.Equals("")) return oAlert.isBad("Field Results is required");
+
+        return validateBibliography();
+    }
+
+    private Boolean validateBibliography()
+    {
+       // oResearch.Bibliography = oResearch.Bibliography.Trim();
+
+        // if (oResearch.Bibliography.Equals("")) return oAlert.isBad("Field Bibliography is required");
+
+        return true;
+    }
+}

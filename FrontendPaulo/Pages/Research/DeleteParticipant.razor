@@ -1,0 +1,57 @@
+﻿
+@page "/research/deleteparticipant/{ProyectTitle}/{CreateDate}/{Document}"
+
+@using FrontendPaulo.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid">
+
+    <h3>Delete Confirmation</h3>
+
+    <div class="form-group row mb-1">
+        <div class="alert alert-danger" role="alert">
+            Participant => ' @Document ' in Proyect => ' @ProyectTitle '
+        </div>
+    </div>
+
+    <div>
+        <button class="btn btn-danger" @onclick="Delete">Delete</button>
+
+        <button class="btn btn-secondary" @onclick="Cancelar">Cancel</button>
+    </div>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string ProyectTitle { get; set; }
+
+    [Parameter]
+    public string CreateDate { get; set; }
+
+    [Parameter]
+    public string Document { get; set; }
+
+    public Response<object> oResponse = new Response<object>();
+
+    public string Url = "/api/Inscription";
+
+    private void Cancelar()
+    {
+        NavigationManager.NavigateTo("/research/add" + "/" + ProyectTitle + "/" + CreateDate);
+    }
+
+    private async Task Delete()
+    {
+        var response = await Http.DeleteAsync(Url + "/" + CreateDate + "/" + Document);
+
+        oResponse = response.Content.ReadFromJsonAsync<Response<object>>().Result;
+
+        NavigationManager.NavigateTo("/research/add" + "/" + ProyectTitle + "/" + CreateDate);
+    }
+}
